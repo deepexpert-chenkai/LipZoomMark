@@ -75,11 +75,14 @@ var addCssRule = function() {
 				mContainer.css('cursor','move');
 				mContainer.css('text-align','left');
 				var markStyle = 'width:30px;height:30px;position:absolute;transform:translate(-50%,-50%);'
-					+'color:#FFF;text-align:center;line-height:30px;opacity:0.8';
+					+'color:#FFF;text-align:center;line-height:30px;opacity:0.6';
 				addCssRule('.mark',markStyle,0);
 				addCssRule('.mark:hover','cursor:hand',0);
 				//绑定鼠标事件
-				document.oncontextmenu=new Function("event.returnValue=false;");
+				document.oncontextmenu = function(){return false;}
+				// mContainer.bind('contextmenu',function(){
+				// 	event.returnValue=false;
+				// });
 				mContainer.mousewheel(mouseWheelHandler);
 				mContainer.mousedown(function(){
 
@@ -123,21 +126,23 @@ var addCssRule = function() {
 			},
 			mark:function(x,y,name,content){
 				var data = mContainer.data('ZoomMarkData');
+				var lastMarkId = mMarks.length == 0 ? 0:mMarks[mMarks.length-1].id;
 				mMarks.push({
+					'id':lastMarkId+1,
 					'x': x,
 					'y': y,
 					'name':name,
 					'content':content,
 					'color':data.settings.markColor,
-					'object':null
+					'available':true
 				});
 				var newMark = mMarks[mMarks.length-1];
-				mContainer.append($('<div class="mark" id="mark_'+mMarks.length+'" style="background-color:'+data.settings.markColor+'"></div>'));
-				newMark.object = $('#mark_'+mMarks.length);
-				newMark.object.css('left',x);
-				newMark.object.css('top',y);
-				newMark.object.html(mMarks.length);
-
+				mContainer.append($('<div class="mark" id="mark_'+newMark.id+'" style="background-color:'+data.settings.markColor+'"></div>'));
+				var object = $('#mark_'+mMarks.length);
+				object.css('left',x);
+				object.css('top',y);
+				object.html(mMarks.length);
+				updateMarksNumber(mMarks);
 				return mMarks;
 			},
 			zoom:function(scale,x,y){
@@ -166,7 +171,7 @@ var addCssRule = function() {
 					mMarks[i].x = x + ( mMarks[i].x - x)*scale;
 					mMarks[i].y = y + ( mMarks[i].y - y)*scale;
 				}
-				updateMarksPosition();
+				updateMarksPosition(mMarks);
 			},
 			move:function(x,y){
 				var data = mContainer.data('ZoomMarkData');
@@ -181,25 +186,42 @@ var addCssRule = function() {
 					mMarks[i].x = x + mMarks[i].x;
 					mMarks[i].y = y + mMarks[i].y;
 				}
-				updateMarksPosition();
+				updateMarksPosition(mMarks);
 			},
 			changeSettings: function(options){
 				var data = mContainer.data('ZoomMarkData');
 				$.extend(data.settings,options);
 
 			},
+			//参数id指的不是当前排序所在的顺序，而是内部id
 			deleteMark: function(removeMarkId){
 				if(!removeMarkId)
 					return;
 				var data = mContainer.data('ZoomMarkData');
-				data.mMarks.splice(removeMarkId-1,1);
+				//当removeMarkId为次序id时
+				// for(var i=0;i<data.mMarks.length;i++){
+				// 	if(data.mMarks[i].available)
+				// 		t++;
+				// 	if(t == removeMarkId){
+				// 		trueId = data.mMarks[i].id;
+				// 		data.mMarks[i].available = false;
+				// 		break;
+				// 	}
+				// }
+				for(var i=0;i<data.mMarks.length;i++){
+					if(data.mMarks[i].id == removeMarkId){
+						data.mMarks[i].available = false;
+					}
+				}
 
-				updateMarksNumber();
-			}
+				$('#mark_'+removeMarkId).remove();
+				updateMarksNumber(data.mMarks);
+				return data.mMarks;
+			},
 			destroy:function(){
 
 			}
-				}
+			
 		}
 
 		//参数判断
@@ -244,15 +266,21 @@ var addCssRule = function() {
 			mImg.width(position.width);
 			mImg.height(position.height);
 		}
-
-		function updateMarksPosition(){
-			for(var i=0;i<mMarks.length;i++){
-				mMarks[i].object.css('left',mMarks[i].x);
-				mMarks[i].object.css('top',mMarks[i].y);
+		//根据mMark数据更新位置
+		function updateMarksPosition(marks){
+			for(var i=0;i<marks.length;i++){
+				$('#mark_'+marks[i].id).css('left',mMarks[i].x);
+				$('#mark_'+marks[i].id).css('top',mMarks[i].y);
 			}
 		}
-		function updateMarksNumber{
-			
+		//根据mMark数据更新编号
+		function updateMarksNumber(marks){
+			var t = 1;
+			for(var i=0;i<marks.length;i++){
+				if(marks[i].available){
+					$('#mark_'+marks[i].id).html(t++);
+				}
+			}
 		}
 	}
 

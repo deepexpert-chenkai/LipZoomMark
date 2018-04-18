@@ -1,25 +1,27 @@
 body{
-
+	margin: 0;
+	padding: 0;
 	text-align: center;
 
 }
 .panel{
-	width: 1003px;
+	width: 1360px;
 	margin: 40px auto;
 }
 
 .panel #container{
+	margin-top: 5px;
 	display: inline-block;
 	vertical-align: top;
-	width: 600px;
-	height: 600px;
+	width: 850px;
+	height: 850px;
 	background-image: url('./assets/transparent.png')
 }
 
 .panel .content{
 	display: inline-block;
 	vertical-align: top;
-	width: 380px;
+	width: 400px;
 }
 
 #marksTable{
@@ -42,4 +44,20 @@ vertical-align: middle!important;
 	height: 28px;
 	color:#FFF;
 	line-height: 28px;
+}
+
+.colorSelect{
+	margin-left: 50px;
+	text-align: left;
+	font-size: 16px;
+}
+
+.colorSelect span{
+	font-weight:600;
+}
+.colorSelect label{
+	margin-left: 10px;
+}
+.colorSelect input{
+	margin-left:5px;
 }
