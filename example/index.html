@@ -15,11 +15,13 @@
 				<span>Mark Color:</span>
 				<label for='blue' style="color:blue">Blue<input type="radio" id="blue" name="markColor" class="radioItem" markColor='blue' checked="checked" /></label>
 				<label for='red' style="color:#d31145">Red<input type="radio" id="red" name="markColor" class="radioItem" markColor='red'/></label>
-				<label for='yellow' style="color:green">Yellow<input type="radio" id="yellow" name="markColor" class="radioItem" markColor='green'/></label>
+				<label for='yellow' style="color:green">Green<input type="radio" id="yellow" name="markColor" class="radioItem" markColor='green'/></label>
 				<p>鼠标滚轮放大缩小图片，左键按住可拖动，右键添加标记</p>
 			</div>
 		<div id="container" style="border:1px solid #aaa;">
 			<img src="./assets/demo.jpg">
+			<button id="reset" class="lipButton">Reset</button>
+			<button id="rotate" class="lipButton">Rotate</button>
 		</div>
 		<div class="content">
 			
@@ -44,6 +46,7 @@
 
 <script type="text/javascript" src="../src/lip-zoom-mark-jquery.js"></script>
 <script type="text/javascript">
+	var angle = 0;
 	$('#container').ZoomMark({
 		'markColor':'blue',
 		'afterMark':addRowToTabel
@@ -54,12 +57,14 @@
 				'markColor':$('.colorSelect').find('input:checked').attr('markColor')
 			});
 		});
-		// $('#marksTable').DataTable({
-		// 	"paging":   false,
-	 //        "ordering": false,
-	 //        "info":     false,
-	 //        "searching": false
-		// });
+		
+		$("#reset").click(function(){
+			$('#container').ZoomMark('reset');
+		});
+		$("#rotate").click(function(){
+			angle = angle+90 >=360 ? 0:angle+90;
+			$('#container').ZoomMark('rotate',angle);
+		})
 	});
 
 	function addRowToTabel(marks){
@@ -78,4 +83,6 @@
 			$(this).html(index+1);
 		})
 	}
+
+
 </script>

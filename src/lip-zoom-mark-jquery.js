@@ -42,14 +42,15 @@ var addCssRule = function() {
 			'y': 0,
 			'scale': 1,
 			'width':0,
-			'height':0
+			'height':0,
+			'rotate':0
 		};
 		var mousePosition = {
 			'isMouseDown': false,
 			x: 0,
 			y: 0
 		}; 
-		var publicMethods = {
+		this.publicMethods = {
 			init:function(options){
 				if(mContainer.data('ZoomMarkData'))
 					return;
@@ -60,7 +61,7 @@ var addCssRule = function() {
 					$.error( 'ZoomMark:Method ' +  method + ' does not exist on e-smartzoom jquery plugin' );
 					return;
 				}
-				
+				mImg.css('position','absolute');
 
 				mContainer.data('ZoomMarkData',{
 					'mImg':mImg,
@@ -93,7 +94,7 @@ var addCssRule = function() {
 						
 					}
 					else if(event.which == 3){
-						publicMethods.mark(event.pageX- mContainer.offset().left,event.pageY- mContainer.offset().top);
+						mContainer.publicMethods.mark(event.pageX- mContainer.offset().left,event.pageY- mContainer.offset().top);
 						settings.afterMark(mMarks);
 					}
 					event.preventDefault();
@@ -103,7 +104,7 @@ var addCssRule = function() {
 						var positionX=event.pageX- mContainer.offset().left; //获取当前鼠标相对img的X坐标  
      					var positionY=event.pageY- mContainer.offset().top; //获取当前鼠标相对img的Y坐标 
 
-     					publicMethods.move(positionX - mousePosition.x,positionY - mousePosition.y);
+     					mContainer.publicMethods.move(positionX - mousePosition.x,positionY - mousePosition.y);
      					mousePosition.x =  positionX;
      					mousePosition.y = positionY;
      					event.preventDefault();
@@ -122,7 +123,6 @@ var addCssRule = function() {
 
 				//mImg.css('transition','width 1s,transform 1s');
 				resetImg();
-				
 			},
 			mark:function(x,y,name,content){
 				var data = mContainer.data('ZoomMarkData');
@@ -147,7 +147,7 @@ var addCssRule = function() {
 			},
 			zoom:function(scale,x,y){
 				var data = mContainer.data('ZoomMarkData');
-
+				var position = data.imgPosition;
 				if(!x){
 					x = mContainer.width()/2;
 					y = mContainer.height()/2;
@@ -167,6 +167,7 @@ var addCssRule = function() {
 				position.height = position.height*scale;
 				updateImgRect();
 
+				var mMarks = data.mMarks;
 				for(var i=0;i<mMarks.length;i++){
 					mMarks[i].x = x + ( mMarks[i].x - x)*scale;
 					mMarks[i].y = y + ( mMarks[i].y - y)*scale;
@@ -175,6 +176,7 @@ var addCssRule = function() {
 			},
 			move:function(x,y){
 				var data = mContainer.data('ZoomMarkData');
+				var position = data.imgPosition;
 				if(!x || !y){
 					return;
 				}
@@ -182,6 +184,7 @@ var addCssRule = function() {
 				position.y += y;
 				updateImgRect();
 
+				var mMarks = data.mMarks;
 				for(var i=0;i<mMarks.length;i++){
 					mMarks[i].x = x + mMarks[i].x;
 					mMarks[i].y = y + mMarks[i].y;
@@ -190,7 +193,8 @@ var addCssRule = function() {
 			},
 			changeSettings: function(options){
 				var data = mContainer.data('ZoomMarkData');
-				$.extend(data.settings,options);
+				data.settings = $.extend(data.settings,options);
+				mContainer.data('ZoomMarkData',data);
 
 			},
 			//参数id指的不是当前排序所在的顺序，而是内部id
@@ -218,6 +222,42 @@ var addCssRule = function() {
 				updateMarksNumber(data.mMarks);
 				return data.mMarks;
 			},
+			rotate:function(angle){
+				var data = mContainer.data('ZoomMarkData');
+				//更改图片参数
+				var preAngle = data.imgPosition.rotate;
+				data.imgPosition.rotate = angle;
+
+				updateImgRect();
+				//更新mark位置
+				var marks = data.mMarks;
+				var img = data.mImg;
+				var centerX = parseFloat(img.css('left')) + img.width()/2;
+				var centerY = parseFloat(img.css('top')) + img.height()/2;
+				for(var i=0;i<marks.length;i++){
+					var newMark = rotateMark({x:centerX,y:centerY},marks[i],angle-preAngle);
+					marks[i].x = newMark.x;
+					marks[i].y = newMark.y;
+				}
+				updateMarksPosition(marks);
+			},
+			reset:function(){
+				var data = mContainer.data('ZoomMarkData');
+				var position = data.imgPosition;
+				var img = data.mImg;
+				var x = 0,y = 0;
+				mContainer.publicMethods['zoom'](1.0/position.scale);
+
+				if(img.width()/img.height()>mContainer.width()/mContainer.height()){
+					y = (mContainer.height()-img.height())/2;
+				}
+				else{
+					x = (mContainer.width()-img.width())/2;
+				}
+				mContainer.publicMethods['move'](x-position.x,y-position.y);
+				mContainer.publicMethods['rotate'](0);
+				return  this;
+			},
 			destroy:function(){
 
 			}
@@ -226,10 +266,10 @@ var addCssRule = function() {
 
 		//参数判断
 		if(!method || typeof method == 'object'){
-			return publicMethods.init(arguments[0]);
+			return this.publicMethods.init(arguments[0]);
 		}
-		else if(publicMethods[method]){
-			return publicMethods[method].apply( this, Array.prototype.slice.call(arguments,1));
+		else if(this.publicMethods[method]){
+			return this.publicMethods[method].apply(this,Array.prototype.slice.call(arguments,1));
 		}
 		else{
 			$.error( 'ZoomMark:Method ' +  method + ' does not exist on ZoomMark jquery plugin' );
@@ -237,7 +277,7 @@ var addCssRule = function() {
 
 		function mouseWheelHandler(event,delta){
 			var scale = delta>0 ? 2:0.5;
-			publicMethods.zoom(scale);
+			mContainer.publicMethods.zoom(scale);
 			event.preventDefault();
 		}
 
@@ -246,14 +286,14 @@ var addCssRule = function() {
 			if(mImg.width()/mImg.height() > mContainer.width()/mContainer.height()){
 				mImg.width(mContainer.width());
 				var y = (mContainer.height()-mImg.height())/2;
-				mImg.css('transform','translate(0,'+y+'px)');
+				mImg.css('top',y+'px');
 				position.y = y;
 
 			}
 			else{
 				mImg.height(mContainer.height());
 				var x = (mContainer.width()-mImg.width())/2;
-				mImg.css('transform','translate('+x+'px,0)');
+				mImg.css('left',x+'px');
 				position.x = x;
 			}
 			position.width = mImg.width();
@@ -262,15 +302,20 @@ var addCssRule = function() {
 
  
 		function updateImgRect(){
-			mImg.css('transform','translate('+position.x+'px,'+position.y+'px)');
-			mImg.width(position.width);
-			mImg.height(position.height);
+			var data = mContainer.data('ZoomMarkData');
+			var img = data.mImg;
+			var position = data.imgPosition;
+			img.css('left',position.x+'px');
+			img.css('top',position.y+'px');
+			img.css('transform',' rotate('+position.rotate+'deg)');
+			img.width(position.width);
+			img.height(position.height);
 		}
 		//根据mMark数据更新位置
 		function updateMarksPosition(marks){
 			for(var i=0;i<marks.length;i++){
-				$('#mark_'+marks[i].id).css('left',mMarks[i].x);
-				$('#mark_'+marks[i].id).css('top',mMarks[i].y);
+				$('#mark_'+marks[i].id).css('left',marks[i].x);
+				$('#mark_'+marks[i].id).css('top',marks[i].y);
 			}
 		}
 		//根据mMark数据更新编号
@@ -281,6 +326,20 @@ var addCssRule = function() {
 					$('#mark_'+marks[i].id).html(t++);
 				}
 			}
+		}
+
+		function rotateMark(center,mark,angle){
+			var r = Math.sqrt((mark.x-center.x)*(mark.x-center.x)+(mark.y-center.y)*(mark.y-center.y));
+			if(r === 0)
+				return mark;
+			var mX = mark.x - center.x;
+			var mY = mark.y - center.y;
+			var iniAngle =  (Math.asin(mX/r))*180/Math.PI;
+			iniAngle = mY>0?(180-iniAngle):iniAngle;
+
+			var x = center.x + r*Math.sin((iniAngle + angle)*Math.PI/180);
+			var y = center.y - r*Math.cos((iniAngle + angle)*Math.PI/180);
+			return {x:x,y:y};
 		}
 	}
 

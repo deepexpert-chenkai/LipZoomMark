@@ -61,3 +61,39 @@ vertical-align: middle!important;
 .colorSelect input{
 	margin-left:5px;
 }
+
+.lipButton{
+	width:50px;
+	height: 60px;
+	background-color: rgba(9,7,35,0.9);
+	position: absolute;
+
+	color:#FFF;
+	border-width: 0px;
+	border-radius: 10px;
+	font-size: 10px;
+	z-index: 999;
+}
+#reset{
+	top:20px;
+	right: 20px;
+}
+#reset:before{
+	background-image: url(./assets/reset.png);
+	content: '';
+	width: 36px;
+	height: 36px;
+	display: block;
+}
+#rotate{
+	top:20px;
+	right:80px;
+}
+
+#rotate:before{
+	background-image: url(./assets/rotate.png);
+	content: '';
+	width: 36px;
+	height: 36px;
+	display: block;
+}
