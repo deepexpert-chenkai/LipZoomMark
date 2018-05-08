@@ -18,6 +18,16 @@
 $('#container').ZoomMark('reset');
 ```
 
+##移动画布
+```
+$('#container').ZoomMark('move',20,20);//后面两个参数代表x,y轴的移动数值
+```
+
+##缩放画布
+```
+$('#container').ZoomMark('zoom',5);//后面的数字代表放大倍数，<1就是缩小
+```
+
 ##旋转画布
 ```
 $('#container').ZoomMark('rotate',90);
