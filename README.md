@@ -33,4 +33,6 @@ $('#container').ZoomMark('changeSettings',{'markColor':'#d31145'});
 $('#container').ZoomMark('deleteMark',id);
 ```
 
-在线Demo
+<h3>在线Demo</h3>
+
+http://www.jq22.com/demo/LipZoomMark201805081119/
